@@ -24,18 +24,27 @@ const TrackComplaints: React.FC = () => {
       setError(null);
       
       try {
-        const apiFilters = {
+        const apiFilters: ComplaintFiltersType = {
           ...filters,
-          status: Array.isArray(filters.status) ? filters.status.join(",") : filters.status,
-          category: Array.isArray(filters.category) ? filters.category.join(",") : filters.category,
-          priority: Array.isArray(filters.priority) ? filters.priority.join(",") : filters.priority,
-          user_id: user.id,
         };
+
+        if (user.role === 'citizen') {
+          apiFilters.user_id = user.id;
+        } else if (user.role === 'agency') {
+          if (user.agency_id) {
+            apiFilters.assignedAgencyId = user.agency_id;
+          } else {
+            setComplaints([]);
+            setLoading(false);
+            return;
+          }
+        }
+
         const data = await api.getComplaints(apiFilters);
         setComplaints(data);
-      } catch (err) {
+      } catch (err: any) {
         setError('Failed to load complaints');
-        toast.error('Failed to load complaints');
+        toast.error(err.message || 'Failed to load complaints');
         setComplaints([]);
       } finally {
         setLoading(false);

@@ -1,22 +1,24 @@
 export interface Agency {
-  id: string;
+  id: number;
   name: string;
   department: string;
   categories: string[];
+  created_at?: string;
 }
 
 export interface User {
-  id: string;
-  name: string;
+  id: number;
   email: string;
+  name: string;
   role: 'citizen' | 'agency' | 'admin' | 'super_admin';
-  token: string;
-  agencyId?: string;
+  agency_id?: number;
+  created_at?: string;
+  token?: string;
 }
 
 export interface Comment {
-  id: string;
-  complaintId: string;
+  id: number;
+  complaintId: number;
   userId: string;
   userName: string;
   userRole: 'citizen' | 'agency' | 'admin' | 'super_admin';
@@ -26,7 +28,7 @@ export interface Comment {
 }
 
 export interface Complaint {
-  id: string;
+  id: number;
   title: string;
   description: string;
   category: string;
@@ -38,8 +40,8 @@ export interface Complaint {
   citizenId: string;
   citizenName: string;
   citizenEmail: string;
-  assignedAgencyId?: string;
-  assignedAgencyName?: string;
+  assignedTo: number | null;
+  assignedAgencyName: string | null;
   attachments?: string[];
   comments?: Comment[];
 }
@@ -64,5 +66,6 @@ export interface ComplaintFilters {
   category?: string[];
   priority?: ('low' | 'medium' | 'high' | 'urgent')[];
   searchTerm?: string;
-  assignedAgencyId?: string;
+  assignedAgencyId?: number | null;
+  user_id?: number;
 }

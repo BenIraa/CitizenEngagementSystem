@@ -38,12 +38,31 @@ const AdminDashboard: React.FC = () => {
       setLoadingComplaints(true);
       setErrorComplaints(null);
       try {
-        // Fetch all complaints for admin view
-        const data = await api.getComplaints({}); 
+        let data: Complaint[] = [];
+        if (user.role === 'agency') {
+          // Fetch complaints assigned to the agency user's agency
+          if (user.agency_id) {
+            console.log('Fetching complaints for agency_id:', user.agency_id);
+            data = await api.getComplaints({ assignedAgencyId: user.agency_id });
+          } else {
+            // Agency user not linked to an agency, show no complaints
+            console.log('Agency user not linked to an agency. Showing no complaints.');
+            setComplaints([]);
+            setLoadingComplaints(false);
+            return;
+          }
+        } else if (user.role === 'admin' || user.role === 'super_admin') {
+          // Fetch all complaints for admin view
+          console.log('Fetching all complaints for admin/superadmin.');
+          data = await api.getComplaints({});
+        }
+
+        console.log('Complaints data received:', data);
         setComplaints(data);
-      } catch (err) {
+      } catch (err: any) {
         setErrorComplaints('Failed to load complaints');
-        toast.error('Failed to load complaints for dashboard');
+        toast.error(err.message || 'Failed to load complaints for dashboard');
+        setComplaints([]); // Clear complaints on error
       } finally {
         setLoadingComplaints(false);
       }

@@ -1,12 +1,16 @@
 import express from 'express';
-import { register, login, getProfile, getAllUsers } from '../controllers/userController.js';
 import { auth, adminAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/register', register);
-router.post('/login', login);
-router.get('/profile', auth, getProfile);
-router.get('/', adminAuth, getAllUsers);
+// This function will be called from server.js with the user controller instance
+const userRoutes = (userController) => {
+  router.post('/register', userController.register);
+  router.post('/login', userController.login);
+  router.get('/profile', auth, userController.getProfile);
+  router.get('/', adminAuth, userController.getUsers); // Use getUsers instead of getAllUsers
 
-export default router; 
+  return router;
+};
+
+export default userRoutes; 
