@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,6 +27,7 @@ import SuperAdminUserManagement from "./pages/SuperAdminUserManagement";
 import SuperAdminAgencyManagement from "./pages/SuperAdminAgencyManagement";
 
 import NotFound from "./pages/NotFound";
+import AgencyDashboard from "./pages/AgencyDashboard";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +73,18 @@ const PrivateRoute = ({ children }: { children: JSX.Element }) => {
     return <Navigate to="/login" replace />;
   }
   
+  return children;
+};
+
+// Protected Route component for agency users
+const AgencyRoute = ({ children }: { children: JSX.Element }) => {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+  if (!user || user.role !== 'agency') {
+    return <Navigate to="/login" replace />;
+  }
   return children;
 };
 
@@ -143,6 +155,13 @@ const App = () => (
               <SuperAdminRoute>
                 <SuperAdminAgencyManagement />
               </SuperAdminRoute>
+            } />
+            
+            {/* Agency Route */}
+            <Route path="/agency" element={
+              <AgencyRoute>
+                <AgencyDashboard />
+              </AgencyRoute>
             } />
             
             {/* Catch-all route */}

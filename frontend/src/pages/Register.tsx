@@ -70,7 +70,7 @@ const Register = () => {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center space-y-1">
           <CardTitle className="text-2xl font-bold text-gray-900">Create an Account</CardTitle>
-          <p className="text-gray-500 text-sm">Sign up to get started with CitizenConnect</p>
+          <p className="text-gray-500 text-sm">Sign up to get started with CitizenEngagementSystem</p>
         </CardHeader>
         <CardContent>
           {error && (

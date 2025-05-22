@@ -26,23 +26,26 @@ export const createComplaint = async (req, res) => {
 };
 
 export const getComplaints = async (req, res) => {
-  const { status, category } = req.query;
+  const { status, category, user_id } = req.query;
   let query = 'SELECT c.*, u.name as user_name FROM complaints c JOIN users u ON c.user_id = u.id';
   const params = [];
 
-  if (status || category) {
-    query += ' WHERE';
-    if (status) {
-      query += ' c.status = ?';
-      params.push(status);
-    }
-    if (category) {
-      query += status ? ' AND' : '';
-      query += ' c.category = ?';
-      params.push(category);
-    }
+  const conditions = [];
+  if (status) {
+    conditions.push('c.status = ?');
+    params.push(status);
   }
-
+  if (category) {
+    conditions.push('c.category = ?');
+    params.push(category);
+  }
+  if (user_id) {
+    conditions.push('c.user_id = ?');
+    params.push(user_id);
+  }
+  if (conditions.length > 0) {
+    query += ' WHERE ' + conditions.join(' AND ');
+  }
   query += ' ORDER BY c.created_at DESC';
 
   try {

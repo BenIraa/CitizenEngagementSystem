@@ -31,12 +31,12 @@ const AdminSettings: React.FC = () => {
                 <CardContent className="space-y-6">
                   <div>
                     <Label htmlFor="system-name">System Name</Label>
-                    <Input id="system-name" defaultValue="CitizenConnect" className="mt-1" />
+                    <Input id="system-name" defaultValue="CitizenEngagementSystem" className="mt-1" />
                   </div>
                   
                   <div>
                     <Label htmlFor="contact-email">Contact Email</Label>
-                    <Input id="contact-email" defaultValue="support@citizenconnect.gov" className="mt-1" />
+                    <Input id="contact-email" defaultValue="support@CitizenEngagementSystem.gov" className="mt-1" />
                   </div>
                   
                   <div>

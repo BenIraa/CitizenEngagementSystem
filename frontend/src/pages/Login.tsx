@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -30,9 +29,20 @@ const Login = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // If user is already logged in, redirect to home page
     if (user) {
-      navigate('/');
+      switch (user.role) {
+        case "super_admin":
+          navigate("/super-admin");
+          break;
+        case "admin":
+          navigate("/admin");
+          break;
+        case "agency":
+          navigate("/agency");
+          break;
+        default:
+          navigate("/track");
+      }
     }
   }, [user, navigate]);
 

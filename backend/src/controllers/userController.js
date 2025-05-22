@@ -104,4 +104,13 @@ export const getProfile = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
+};
+
+export const getAllUsers = (req, res) => {
+  db.all('SELECT id, email, name, role, created_at FROM users', [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(rows);
+  });
 }; 

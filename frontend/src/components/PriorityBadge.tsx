@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Complaint } from '@/lib/types';
 
@@ -38,9 +37,14 @@ const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority, size = 'md' }) 
     return `${baseClasses} ${sizeClasses[size]} ${colorClasses}`;
   };
   
+  let display = 'Unknown';
+  if (typeof priority === 'string' && priority.length > 0) {
+    display = priority.charAt(0).toUpperCase() + priority.slice(1);
+  }
+
   return (
     <span className={getPriorityClasses()}>
-      {priority.charAt(0).toUpperCase() + priority.slice(1)}
+      {display}
     </span>
   );
 };

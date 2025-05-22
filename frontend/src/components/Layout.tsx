@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <header className="bg-gov-blue text-white shadow-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold">
-            CitizenConnect
+            CitizenEngagementSystem
           </Link>
           
           <AuthNav />
@@ -127,6 +126,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 )}
               </>
             )}
+            {user?.role === "agency" && (
+              <>
+                <Link 
+                  to="/agency"
+                  className={`px-4 py-3 font-medium text-sm ${location.pathname === '/agency' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'}`}
+                >
+                  Dashboard
+                </Link>
+                {/* Add more agency links here */}
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -141,7 +151,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-white text-lg font-semibold mb-4">CitizenConnect</h3>
+              <h3 className="text-white text-lg font-semibold mb-4">CitizenEngagementSystem</h3>
               <p className="text-sm">
                 Bridging the gap between citizens and government agencies for effective public service feedback.
               </p>
@@ -161,12 +171,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <h4 className="text-white text-md font-medium mb-4">Contact</h4>
               <p className="text-sm mb-2">123 Government Plaza</p>
               <p className="text-sm mb-2">City Center, State 12345</p>
-              <p className="text-sm">support@citizenconnect.gov</p>
+              <p className="text-sm">support@CitizenEngagementSystem.gov</p>
             </div>
           </div>
           
           <div className="border-t border-gray-700 mt-8 pt-4 text-sm text-center">
-            &copy; {new Date().getFullYear()} CitizenConnect. All rights reserved.
+            &copy; {new Date().getFullYear()} CitizenEngagementSystem. All rights reserved.
           </div>
         </div>
       </footer>

@@ -56,8 +56,19 @@ export const createComplaint = async (token: string, data: { title: string; desc
   return handleResponse(response);
 };
 
-export const getComplaints = async (filters?: { status?: string; category?: string }) => {
-  const queryParams = new URLSearchParams(filters).toString();
+export const getComplaints = async (filters?: Record<string, any>) => {
+  // Convert array filters to comma-separated strings
+  const normalizedFilters: Record<string, string> = {};
+  if (filters) {
+    Object.entries(filters).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        normalizedFilters[key] = value.join(',');
+      } else if (value !== undefined && value !== null) {
+        normalizedFilters[key] = String(value);
+      }
+    });
+  }
+  const queryParams = new URLSearchParams(normalizedFilters).toString();
   const response = await fetch(`${API_URL}/complaints${queryParams ? `?${queryParams}` : ''}`);
   return handleResponse(response);
 };

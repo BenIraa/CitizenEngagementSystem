@@ -187,7 +187,7 @@ const ComplaintDetail: React.FC = () => {
                   
                   <div className="p-3 bg-blue-50 rounded-md">
                     <h4 className="font-medium mb-1">Citizen Support</h4>
-                    <p className="text-sm">support@citizenconnect.gov</p>
+                    <p className="text-sm">support@CitizenEngagementSystem.gov</p>
                     <p className="text-sm">1-800-555-HELP</p>
                   </div>
 

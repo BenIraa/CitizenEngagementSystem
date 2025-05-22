@@ -41,8 +41,8 @@ const AuthNav = () => {
               </Link>
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
+          <Button variant="outline" className='text-gray-900' size="sm" onClick={handleSignOut}>
+            <LogOut className="mr-2 h-4 w-4 text-gray-900" />
             Sign Out
           </Button>
         </>

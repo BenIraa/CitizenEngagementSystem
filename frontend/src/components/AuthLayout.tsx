@@ -26,7 +26,7 @@ const AuthLayout: React.FC<LayoutProps> = ({ children }) => {
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <Link to="/" className="text-xl font-bold text-gray-900">
-            CitizenConnect
+            CitizenEngagementSystem
           </Link>
           
           <div className="flex items-center space-x-6">
@@ -81,7 +81,7 @@ const AuthLayout: React.FC<LayoutProps> = ({ children }) => {
       <footer className="bg-white border-t py-6">
         <div className="container mx-auto px-4">
           <div className="text-center text-gray-500 text-sm">
-            &copy; {new Date().getFullYear()} CitizenConnect. All rights reserved.
+            &copy; {new Date().getFullYear()} CitizenEngagementSystem. All rights reserved.
           </div>
         </div>
       </footer>
