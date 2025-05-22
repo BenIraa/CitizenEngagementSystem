@@ -17,7 +17,7 @@ import ComplaintDetail from "./pages/ComplaintDetail";
 
 // Admin-facing pages
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminComplaints from "./pages/AdminComplaints";
+import AdminManageComplaintsPage from "./pages/AdminManageComplaintsPage";
 import AdminComplaintDetail from "./pages/AdminComplaintDetail";
 import AdminSettings from "./pages/AdminSettings";
 
@@ -126,7 +126,7 @@ const App = () => (
             } />
             <Route path="/admin/complaints" element={
               <AdminRoute>
-                <AdminComplaints />
+                <AdminManageComplaintsPage />
               </AdminRoute>
             } />
             <Route path="/admin/complaint/:id" element={

@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import * as api from './api';
 
 interface AuthContextType {
-  user: User | null;
+  user: (User & { token: string }) | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
@@ -20,7 +20,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<(User & { token: string }) | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Load user from token on mount
@@ -28,8 +28,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const token = localStorage.getItem('token');
     if (token) {
       api.getProfile(token)
-        .then((user) => setUser(user))
-        .catch(() => setUser(null))
+        .then((userData: User) => setUser({...userData, token })) // Include token in state
+        .catch(() => {
+          setUser(null);
+          localStorage.removeItem('token'); // Clear invalid token
+        })
         .finally(() => setLoading(false));
     } else {
         setLoading(false);
@@ -41,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await api.login(email, password);
       localStorage.setItem('token', res.token);
-      setUser(res.user);
+      setUser({...res.user, token: res.token}); // Include token in state after sign in
       toast.success('Signed in successfully');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in');

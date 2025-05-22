@@ -23,6 +23,8 @@ const formatDate = (dateString: string): string => {
     year: 'numeric',
     hour: 'numeric',
     minute: 'numeric',
+    hour12: true,
+    timeZoneName: 'short'
   }).format(date);
 };
 

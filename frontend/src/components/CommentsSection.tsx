@@ -12,19 +12,19 @@ interface CommentsSectionProps {
   onAddComment: (message: string) => Promise<void>;
 }
 
-const CommentsSection: React.FC<CommentsSectionProps> = ({
-  complaintId,
+const CommentsSection: React.FC<CommentsSectionProps> = ({ 
+  complaintId, 
   comments,
   onAddComment,
 }) => {
   const { user } = useAuth();
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || !user) return;
-
+    
     try {
       setIsSubmitting(true);
       await onAddComment(newComment);
@@ -33,15 +33,15 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
       setIsSubmitting(false);
     }
   };
-
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Comments & Updates</h3>
+      <h3 className="text-lg font-medium">Comments & Updates</h3>
         <span className="text-sm text-gray-500">
           {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
         </span>
-      </div>
+        </div>
 
       {user && (
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -72,13 +72,13 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
             <Card key={comment.id} className="bg-gray-50">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
-                  <div>
+                <div>
                     <div className="flex items-center space-x-2">
-                      <span className="font-medium">{comment.userName}</span>
+                  <span className="font-medium">{comment.userName}</span>
                       {comment.userRole && (
                         <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
                           {comment.userRole}
-                        </span>
+                  </span>
                       )}
                     </div>
                     <p className="text-sm text-gray-500 mt-1">
@@ -98,7 +98,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
             </Card>
           ))
         )}
-      </div>
+            </div>
     </div>
   );
 };

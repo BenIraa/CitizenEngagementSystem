@@ -1,0 +1,49 @@
+{
+  "complaints": [
+    {
+      "user_id": 1,
+      "title": "Water Leak in Main Street",
+      "description": "There's a significant water leak near the intersection of Main Street and Park Avenue. Water is pooling on the road and causing traffic issues.",
+      "category": "Water Supply",
+      "location": "Main Street and Park Avenue",
+      "priority": "high",
+      "status": "new"
+    },
+    {
+      "user_id": 1,
+      "title": "Broken Street Light",
+      "description": "Street light at Oak Street has been out for 3 days. Making the area unsafe at night.",
+      "category": "Street Lights",
+      "location": "Oak Street",
+      "priority": "medium",
+      "status": "in_progress"
+    },
+    {
+      "user_id": 2,
+      "title": "Pothole on River Road",
+      "description": "Large pothole on River Road near the bridge. Getting bigger with each rain.",
+      "category": "Roads",
+      "location": "River Road",
+      "priority": "high",
+      "status": "new"
+    },
+    {
+      "user_id": 2,
+      "title": "Garbage Collection Issue",
+      "description": "Garbage hasn't been collected in our neighborhood for the past week.",
+      "category": "Waste Management",
+      "location": "Green Valley Neighborhood",
+      "priority": "medium",
+      "status": "resolved"
+    },
+    {
+      "user_id": 1,
+      "title": "Noise Pollution from Construction",
+      "description": "Construction work is continuing late into the night, disturbing residents.",
+      "category": "Noise",
+      "location": "Downtown Area",
+      "priority": "low",
+      "status": "in_progress"
+    }
+  ]
+} 

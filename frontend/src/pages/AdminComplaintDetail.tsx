@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -22,83 +21,134 @@ import StatusBadge from '@/components/StatusBadge';
 import PriorityBadge from '@/components/PriorityBadge';
 import CommentsSection from '@/components/CommentsSection';
 import { agencies } from '@/lib/data';
-import useStore from '@/lib/store';
+import { Complaint } from '@/lib/types';
+import * as api from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 
 const formatDate = (dateString: string): string => {
+  if (!dateString) return 'N/A';
+  
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'N/A';
+  
   return new Intl.DateTimeFormat('en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
     minute: 'numeric',
+    hour12: true,
+    timeZoneName: 'short'
   }).format(date);
 };
 
 const AdminComplaintDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getComplaintById, updateComplaintStatus, updateComplaintAgency } = useStore();
-  const [complaint, setComplaint] = useState(
-    id ? getComplaintById(id) : undefined
-  );
+  const { user } = useAuth();
+  const [complaint, setComplaint] = useState<Complaint | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [selectedAgencyId, setSelectedAgencyId] = useState<string>('');
 
+  // Fetch complaint details
   useEffect(() => {
-    if (id) {
-      const complaintData = getComplaintById(id);
-      if (complaintData) {
-        setComplaint(complaintData);
-        setSelectedStatus(complaintData.status);
-        setSelectedAgencyId(complaintData.assignedAgencyId || '');
-      } else {
-        // Complaint not found, redirect to admin complaints page
-        navigate('/admin/complaints');
-      }
-    }
-  }, [id, getComplaintById, navigate]);
-
-  const handleStatusChange = (newStatus: string) => {
-    if (!id || !complaint) return;
-    
-    updateComplaintStatus(id, newStatus as any);
-    setSelectedStatus(newStatus);
-    toast.success(`Complaint status updated to ${newStatus}`);
-    
-    // Update the local state
-    setComplaint({
-      ...complaint,
-      status: newStatus as any,
-      updatedAt: new Date().toISOString()
-    });
-  };
-
-  const handleAgencyChange = (agencyId: string) => {
-    if (!id || !complaint) return;
-    
-    const agency = agencies.find(a => a.id === agencyId);
-    if (agency) {
-      updateComplaintAgency(id, agency.id, agency.name);
-      setSelectedAgencyId(agency.id);
-      toast.success(`Complaint assigned to ${agency.name}`);
+    const fetchComplaint = async () => {
+      if (!id) return;
       
-      // Update the local state
-      setComplaint({
-        ...complaint,
-        assignedAgencyId: agency.id,
-        assignedAgencyName: agency.name,
-        updatedAt: new Date().toISOString()
-      });
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await api.getComplaintById(id);
+        setComplaint(data);
+        setSelectedStatus(data.status);
+        setSelectedAgencyId(data.assignedAgencyId || '');
+      } catch (err) {
+        setError('Failed to load complaint details');
+        toast.error('Failed to load complaint details');
+        navigate('/admin/complaints');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchComplaint();
+  }, [id, navigate]);
+
+  // Handle status update
+  const handleStatusChange = async (newStatus: string) => {
+    if (!id || !user) return;
+    
+    try {
+      await api.updateComplaintStatus(user.token, id, { status: newStatus });
+      setSelectedStatus(newStatus);
+      // Optimistically update local state or refetch
+      setComplaint(prev => prev ? { ...prev, status: newStatus, updatedAt: new Date().toISOString() } : null);
+      toast.success(`Complaint status updated to ${newStatus}`);
+    } catch (err) {
+      toast.error('Failed to update status');
+      console.error(err);
     }
   };
 
-  if (!complaint) {
+  // Handle agency assignment update
+  const handleAgencyChange = async (agencyId: string) => {
+    if (!id || !user) return;
+    
+    try {
+      await api.updateComplaintStatus(user.token, id, { assigned_to: agencyId });
+      setSelectedAgencyId(agencyId);
+       // Optimistically update local state or refetch
+      const agency = agencies.find(a => a.id === agencyId);
+      setComplaint(prev => prev ? { ...prev, assignedAgencyId: agencyId, assignedAgencyName: agency?.name, updatedAt: new Date().toISOString() } : null);
+      toast.success(`Complaint assigned to ${agency?.name || 'Unknown Agency'}`);
+    } catch (err) {
+      toast.error('Failed to assign agency');
+       console.error(err);
+    }
+  };
+
+  // Handle adding comment/response
+  const handleAddResponse = async (message: string) => {
+    if (!id || !user) return;
+
+    try {
+      await api.addResponse(user.token, id, message);
+      // Refetch complaint data to get updated comments/responses
+      const updatedComplaint = await api.getComplaintById(id);
+      setComplaint(updatedComplaint);
+      toast.success('Response added successfully');
+    } catch (err) {
+      toast.error('Failed to add response');
+      console.error(err);
+    }
+  };
+
+  if (loading) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8 text-center">
-          <p>Loading complaint details...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading complaint details...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !complaint) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8 text-center">
+          <p className="text-red-600">{error || 'Complaint not found'}</p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => navigate('/admin/complaints')}
+          >
+            Back to Complaints
+          </Button>
         </div>
       </Layout>
     );
@@ -175,8 +225,9 @@ const AdminComplaintDetail: React.FC = () => {
               <CardContent className="pt-6">
                 <CommentsSection
                   complaintId={complaint.id}
-                  comments={complaint.comments}
-                  isAdminView={true}
+                  comments={complaint.comments || []}
+                  onAddComment={handleAddResponse}
+                  // isAdminView is not needed here, CommentsSection handles user role internally
                 />
               </CardContent>
             </Card>
@@ -213,77 +264,39 @@ const AdminComplaintDetail: React.FC = () => {
                   {/* Agency Assignment */}
                   <div>
                     <Label htmlFor="agency">Assign to Agency</Label>
-                    <Select 
+                     <Select 
                       value={selectedAgencyId} 
                       onValueChange={handleAgencyChange}
-                    >
+                     >
                       <SelectTrigger id="agency" className="mt-1">
-                        <SelectValue placeholder="Select agency" />
+                        <SelectValue placeholder="Assign to agency" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">-- Unassigned --</SelectItem>
-                        {agencies.map((agency) => (
+                        {agencies.map(agency => (
                           <SelectItem key={agency.id} value={agency.id}>
-                            {agency.name} ({agency.department})
+                            {agency.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Priority Management */}
-                  <div>
-                    <Label htmlFor="priority">Priority Level</Label>
-                    <div className="mt-1 flex items-center space-x-2">
-                      <PriorityBadge priority={complaint.priority} />
-                      <Button variant="outline" size="sm">
-                        Change
-                      </Button>
-                    </div>
+                     </Select>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="mb-6">
-              <CardHeader className="border-b bg-slate-50">
-                <CardTitle className="text-lg">Category Information</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <p className="text-sm mb-4">
-                  This complaint falls under the <span className="font-medium capitalize">{complaint.category}</span> category.
-                </p>
-                
-                {complaint.assignedAgencyId && (
-                  <div className="p-3 bg-blue-50 rounded-md">
-                    <h4 className="font-medium mb-1">Assigned Department</h4>
-                    <p className="text-sm">{complaint.assignedAgencyName}</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {agencies.find(a => a.id === complaint.assignedAgencyId)?.department}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
+             {/* Helpful Info */}
             <Card>
               <CardHeader className="border-b bg-slate-50">
-                <CardTitle className="text-lg">Additional Actions</CardTitle>
+                <CardTitle className="text-lg">Helpful Info</CardTitle>
               </CardHeader>
-              <CardContent className="pt-6">
-                <div className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start">
-                    Send Email Notification
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    Generate Report
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    View Audit Log
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50">
-                    Flag as Inappropriate
-                  </Button>
+               <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <p className="text-sm">
+                     Review the complaint details and timeline to determine the appropriate action.
+                  </p>
+                   <p className="text-sm">
+                     Use the status update and agency assignment options to manage the complaint workflow.
+                  </p>
                 </div>
               </CardContent>
             </Card>

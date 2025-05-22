@@ -1,6 +1,7 @@
-import { User } from './types';
+import { User, Complaint, Comment } from './types';
 
-const API_URL = 'http://localhost:3000/api';
+// API configuration
+const API_URL = '/api';
 
 // Helper function to handle API responses
 const handleResponse = async (response: Response) => {
@@ -43,8 +44,23 @@ export const getProfile = async (token: string) => {
   return handleResponse(response);
 };
 
+export const getUsers = async (token: string) => {
+  const response = await fetch(`${API_URL}/users`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+   return handleResponse(response);
+};
+
 // Complaint functions
-export const createComplaint = async (token: string, data: { title: string; description: string; category: string }) => {
+export const createComplaint = async (token: string, data: { 
+  title: string; 
+  description: string; 
+  category: string;
+  location: string;
+  priority: string;
+}) => {
   const response = await fetch(`${API_URL}/complaints`, {
     method: 'POST',
     headers: {
@@ -56,21 +72,34 @@ export const createComplaint = async (token: string, data: { title: string; desc
   return handleResponse(response);
 };
 
-export const getComplaints = async (filters?: Record<string, any>) => {
-  // Convert array filters to comma-separated strings
-  const normalizedFilters: Record<string, string> = {};
-  if (filters) {
+export const getComplaints = async (filters: any = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    // Add filters to query params
     Object.entries(filters).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        normalizedFilters[key] = value.join(',');
-      } else if (value !== undefined && value !== null) {
-        normalizedFilters[key] = String(value);
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value.toString());
       }
     });
+
+    // For admin view, don't include user_id filter unless explicitly provided
+    const url = `${API_URL}/complaints?${queryParams.toString()}`;
+
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.details || errorData.error || 'Failed to fetch complaints');
+    }
+
+    const data = await response.json();
+    console.log('Received complaints:', data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching complaints:', error);
+    throw error;
   }
-  const queryParams = new URLSearchParams(normalizedFilters).toString();
-  const response = await fetch(`${API_URL}/complaints${queryParams ? `?${queryParams}` : ''}`);
-  return handleResponse(response);
 };
 
 export const getComplaintById = async (id: string) => {
@@ -78,7 +107,7 @@ export const getComplaintById = async (id: string) => {
   return handleResponse(response);
 };
 
-export const updateComplaintStatus = async (token: string, id: string, data: { status: string; assigned_to?: string }) => {
+export const updateComplaintStatus = async (token: string, id: string, data: { status?: string; assigned_to?: string }) => {
   const response = await fetch(`${API_URL}/complaints/${id}/status`, {
     method: 'PATCH',
     headers: {
@@ -105,4 +134,21 @@ export const addResponse = async (token: string, complaintId: string, message: s
 export const getResponses = async (complaintId: string) => {
   const response = await fetch(`${API_URL}/complaints/${complaintId}/responses`);
   return handleResponse(response);
+};
+
+// Categories functions
+export const getCategories = async () => {
+  // For now, hardcode categories or fetch from a simple backend endpoint if created
+  // In a real app, this would be fetched from the backend database
+   const categories = [
+    'Water Supply',
+    'Street Lights',
+    'Roads',
+    'Waste Management',
+    'Noise',
+    'Public Parks',
+    'Transportation',
+    'Other'
+  ];
+  return Promise.resolve(categories);
 }; 

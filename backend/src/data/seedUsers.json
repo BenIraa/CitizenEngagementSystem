@@ -1,0 +1,40 @@
+{
+  "users": [
+    {
+      "email": "citizen1@example.com",
+      "password": "citizen123",
+      "name": "John Citizen",
+      "role": "citizen"
+    },
+    {
+      "email": "citizen2@example.com",
+      "password": "citizen123",
+      "name": "Jane Citizen",
+      "role": "citizen"
+    },
+    {
+      "email": "agency1@example.com",
+      "password": "agency123",
+      "name": "City Water Department",
+      "role": "agency"
+    },
+    {
+      "email": "agency2@example.com",
+      "password": "agency123",
+      "name": "Road Maintenance",
+      "role": "agency"
+    },
+    {
+      "email": "admin@example.com",
+      "password": "admin123",
+      "name": "System Admin",
+      "role": "admin"
+    },
+    {
+      "email": "superadmin@example.com",
+      "password": "super123",
+      "name": "Super Admin",
+      "role": "superadmin"
+    }
+  ]
+} 

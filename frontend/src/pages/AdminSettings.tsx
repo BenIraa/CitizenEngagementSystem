@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,8 +6,68 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import Layout from '@/components/Layout';
+import { User } from '@/lib/types';
+import * as api from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
+import { toast } from 'sonner';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { format } from 'date-fns';
 
 const AdminSettings: React.FC = () => {
+  const { user } = useAuth();
+  const [users, setUsers] = useState<User[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [errorUsers, setErrorUsers] = useState<string | null>(null);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [errorCategories, setErrorCategories] = useState<string | null>(null);
+
+  // Fetch Users
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) return; // Only fetch for admins
+      setLoadingUsers(true);
+      setErrorUsers(null);
+      try {
+        const data = await api.getUsers(user.token);
+        setUsers(data);
+      } catch (err) {
+        setErrorUsers('Failed to load users');
+        toast.error('Failed to load users');
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+     // Fetch users when component mounts or user changes
+     fetchUsers();
+  }, [user]);
+
+  // Fetch Categories
+   useEffect(() => {
+    const fetchCategories = async () => {
+       setLoadingCategories(true);
+       setErrorCategories(null);
+      try {
+        const data = await api.getCategories();
+        setCategories(data);
+      } catch (err) {
+        setErrorCategories('Failed to load categories');
+        toast.error('Failed to load categories');
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    // Fetch categories when component mounts
+    fetchCategories();
+  }, []); // Empty dependency array means this runs once on mount
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -176,12 +235,18 @@ const AdminSettings: React.FC = () => {
               <CardContent>
                 <div className="space-y-6">
                   <div className="space-y-4">
-                    {/* Category management UI would go here */}
                     <p className="text-gray-500 text-sm mb-4">
                       Manage categories that citizens can use to classify their complaints
                     </p>
                     
-                    <div className="border rounded-md overflow-hidden">
+                    {loadingCategories ? (
+                       <div className="flex justify-center items-center p-8">
+                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                       </div>
+                    ) : errorCategories ? (
+                       <div className="text-center text-red-600 p-8">{errorCategories}</div>
+                    ) : (categories.length > 0 ? (
+                     <div className="border rounded-md overflow-hidden">
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
@@ -192,43 +257,28 @@ const AdminSettings: React.FC = () => {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {/* Sample categories */}
-                          <tr>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Roads</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Infrastructure</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <Switch defaultChecked />
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <Button variant="ghost" size="sm">Edit</Button>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Water Supply</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Utilities</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <Switch defaultChecked />
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <Button variant="ghost" size="sm">Edit</Button>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Public Safety</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Safety and Security</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <Switch defaultChecked />
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <Button variant="ghost" size="sm">Edit</Button>
-                            </td>
-                          </tr>
+                          {/* Render fetched categories */}
+                          {categories.map((category, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize">{category}</TableCell>
+                              {/* Placeholder Cells */}
+                              <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</TableCell>
+                              <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <Switch disabled /> {/* Disable for now as management isn't implemented */}
+                              </TableCell>
+                              <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <Button variant="ghost" size="sm" disabled>Edit</Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
                         </tbody>
                       </table>
                     </div>
+                    ) : (<div className="text-center text-gray-600 p-8">No categories found.</div>)
+                    )}
                     
                     <div className="flex justify-end">
-                      <Button>Add New Category</Button>
+                      <Button disabled={loadingCategories}>Add New Category</Button>
                     </div>
                   </div>
                 </div>
@@ -247,44 +297,47 @@ const AdminSettings: React.FC = () => {
                     Manage system users and their permissions
                   </p>
                   
-                  <div className="border rounded-md overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {/* Sample users */}
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">John Admin</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">john@govagency.com</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Agency</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Public Works</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Button variant="ghost" size="sm">Edit</Button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Sarah Manager</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">sarah@govagency.com</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Admin</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">All</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Button variant="ghost" size="sm">Edit</Button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                  {loadingUsers ? (
+                     <div className="flex justify-center items-center p-8">
+                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                     </div>
+                  ) : errorUsers ? (
+                     <div className="text-center text-red-600 p-8">{errorUsers}</div>
+                  ) : (users.length > 0 ? (
+                    <div className="border rounded-md overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Created At</TableHead>
+                            {/* Placeholder Header */}
+                             <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {users.map(user => (
+                            <TableRow key={user.id}>
+                              <TableCell className="font-medium">{user.name}</TableCell>
+                              <TableCell>{user.email}</TableCell>
+                              <TableCell className="capitalize">{user.role}</TableCell>
+                              <TableCell>{user.createdAt ? format(new Date(user.createdAt), 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
+                              {/* Placeholder Cell */}
+                              <TableCell>
+                                <Button variant="ghost" size="sm" disabled>Edit</Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (<div className="text-center text-gray-600 p-8">No users found.</div>)
+                  )}
                   
                   <div className="flex justify-end">
-                    <Button>Add New User</Button>
-                  </div>
+                     <Button disabled={loadingUsers}>Add New User</Button>
+                   </div>
                 </div>
               </CardContent>
             </Card>

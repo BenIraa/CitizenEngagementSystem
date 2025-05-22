@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -28,6 +27,8 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { categories } from '@/lib/data';
 import useStore from '@/lib/store';
+import { useAuth } from '@/lib/auth-context';
+import * as api from '@/lib/api';
 
 const formSchema = z.object({
   title: z.string().min(5, { message: 'Title must be at least 5 characters long' }).max(100),
@@ -38,7 +39,7 @@ const formSchema = z.object({
 
 const SubmitComplaint: React.FC = () => {
   const navigate = useNavigate();
-  const { addComplaint } = useStore();
+  const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -52,15 +53,21 @@ const SubmitComplaint: React.FC = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!user) {
+      toast.error('You must be logged in to submit a complaint');
+      return;
+    }
+
     setSubmitting(true);
     
     try {
-      // Add the complaint to our store
-      addComplaint({
+      // Create the complaint via API
+      await api.createComplaint(user.token, {
         title: values.title,
         description: values.description,
         category: values.category,
         location: values.location,
+        priority: 'medium' // Default priority
       });
       
       toast.success('Complaint submitted successfully!');
