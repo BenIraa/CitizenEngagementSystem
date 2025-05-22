@@ -1,4 +1,3 @@
-
 export interface Agency {
   id: string;
   name: string;
@@ -11,6 +10,7 @@ export interface User {
   name: string;
   email: string;
   role: 'citizen' | 'agency' | 'admin' | 'super_admin';
+  token: string;
   agencyId?: string;
 }
 

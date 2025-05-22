@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
+import StatusBadge from '@/components/StatusBadge';
+import PriorityBadge from '@/components/PriorityBadge';
 import { Complaint } from '@/lib/types';
-import StatusBadge from './StatusBadge';
-import PriorityBadge from './PriorityBadge';
 
 interface ComplaintCardProps {
   complaint: Complaint;
@@ -12,8 +12,10 @@ interface ComplaintCardProps {
 
 const formatDate = (dateString: string): string => {
   if (!dateString) return 'N/A';
+  
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return 'N/A';
+  
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',

@@ -41,7 +41,7 @@ const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority, size = 'md' }) 
   if (typeof priority === 'string' && priority.length > 0) {
     display = priority.charAt(0).toUpperCase() + priority.slice(1);
   }
-
+  
   return (
     <span className={getPriorityClasses()}>
       {display}

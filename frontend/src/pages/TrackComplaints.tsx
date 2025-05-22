@@ -7,33 +7,42 @@ import ComplaintFilters from '@/components/ComplaintFilters';
 import { ComplaintFilters as ComplaintFiltersType, Complaint } from '@/lib/types';
 import * as api from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { toast } from 'sonner';
 
 const TrackComplaints: React.FC = () => {
   const { user } = useAuth();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [filters, setFilters] = useState<ComplaintFiltersType>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchComplaints = async () => {
+      if (!user) return;
+      
       setLoading(true);
+      setError(null);
+      
       try {
         const apiFilters = {
           ...filters,
           status: Array.isArray(filters.status) ? filters.status.join(",") : filters.status,
           category: Array.isArray(filters.category) ? filters.category.join(",") : filters.category,
           priority: Array.isArray(filters.priority) ? filters.priority.join(",") : filters.priority,
-          user_id: user?.id,
+          user_id: user.id,
         };
         const data = await api.getComplaints(apiFilters);
         setComplaints(data);
-      } catch (error) {
+      } catch (err) {
+        setError('Failed to load complaints');
+        toast.error('Failed to load complaints');
         setComplaints([]);
       } finally {
         setLoading(false);
       }
     };
-    if (user) fetchComplaints();
+
+    fetchComplaints();
   }, [filters, user]);
 
   const handleApplyFilters = (newFilters: ComplaintFiltersType) => {
@@ -51,7 +60,17 @@ const TrackComplaints: React.FC = () => {
         <ComplaintFilters onApplyFilters={handleApplyFilters} />
 
         {loading ? (
-          <div className="text-center py-12">Loading...</div>
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading complaints...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+          </div>
         ) : complaints.length === 0 ? (
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-gray-600 mb-2">No complaints found</h3>

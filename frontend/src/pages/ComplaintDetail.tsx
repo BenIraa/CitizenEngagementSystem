@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,10 +6,17 @@ import Layout from '@/components/Layout';
 import StatusBadge from '@/components/StatusBadge';
 import PriorityBadge from '@/components/PriorityBadge';
 import CommentsSection from '@/components/CommentsSection';
-import useStore from '@/lib/store';
+import { Complaint } from '@/lib/types';
+import * as api from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
+import { toast } from 'sonner';
 
 const formatDate = (dateString: string): string => {
+  if (!dateString) return 'N/A';
+  
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'N/A';
+  
   return new Intl.DateTimeFormat('en-US', {
     month: 'long',
     day: 'numeric',
@@ -23,28 +29,69 @@ const formatDate = (dateString: string): string => {
 const ComplaintDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getComplaintById } = useStore();
-  const [complaint, setComplaint] = useState(
-    id ? getComplaintById(id) : undefined
-  );
+  const { user } = useAuth();
+  const [complaint, setComplaint] = useState<Complaint | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id) {
-      const complaintData = getComplaintById(id);
-      if (complaintData) {
-        setComplaint(complaintData);
-      } else {
-        // Complaint not found, redirect to track page
+    const fetchComplaint = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await api.getComplaintById(id);
+        setComplaint(data);
+      } catch (err) {
+        setError('Failed to load complaint details');
+        toast.error('Failed to load complaint details');
         navigate('/track');
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [id, getComplaintById, navigate]);
+    };
 
-  if (!complaint) {
+    fetchComplaint();
+  }, [id, navigate]);
+
+  const handleAddResponse = async (message: string) => {
+    if (!id || !user) return;
+
+    try {
+      await api.addResponse(user.token, id, message);
+      // Refresh complaint data to get updated responses
+      const updatedComplaint = await api.getComplaintById(id);
+      setComplaint(updatedComplaint);
+      toast.success('Response added successfully');
+    } catch (err) {
+      toast.error('Failed to add response');
+    }
+  };
+
+  if (loading) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8 text-center">
-          <p>Loading complaint details...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading complaint details...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !complaint) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8 text-center">
+          <p className="text-red-600">{error || 'Complaint not found'}</p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => navigate('/track')}
+          >
+            Back to Complaints
+          </Button>
         </div>
       </Layout>
     );
@@ -120,7 +167,8 @@ const ComplaintDetail: React.FC = () => {
               <CardContent className="pt-6">
                 <CommentsSection
                   complaintId={complaint.id}
-                  comments={complaint.comments}
+                  comments={complaint.comments || []}
+                  onAddComment={handleAddResponse}
                 />
               </CardContent>
             </Card>

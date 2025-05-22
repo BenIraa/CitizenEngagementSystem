@@ -23,7 +23,7 @@ const Home: React.FC = () => {
               </Button>
             </Link>
             <Link to="/track">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-blue-700">
+              <Button size="lg" variant="outline" className="border-white text-white bg-blue-700">
                 Track Your Complaints
               </Button>
             </Link>

@@ -32,8 +32,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .catch(() => setUser(null))
         .finally(() => setLoading(false));
     } else {
-      setLoading(false);
-    }
+        setLoading(false);
+      }
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -65,9 +65,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    setUser(null);
+      setUser(null);
     localStorage.removeItem('token');
-    toast.success('Signed out successfully');
+      toast.success('Signed out successfully');
   };
 
   const value = {

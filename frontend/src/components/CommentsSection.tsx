@@ -1,122 +1,104 @@
-
 import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Comment } from '@/lib/types';
-import useStore from '@/lib/store';
+import { useAuth } from '@/lib/auth-context';
+import { formatDistanceToNow } from 'date-fns';
 
 interface CommentsSectionProps {
   complaintId: string;
-  comments: Comment[] | undefined;
-  isAdminView?: boolean;
+  comments: Comment[];
+  onAddComment: (message: string) => Promise<void>;
 }
 
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-  }).format(date);
-};
-
-const CommentsSection: React.FC<CommentsSectionProps> = ({ 
-  complaintId, 
-  comments = [], 
-  isAdminView = false 
+const CommentsSection: React.FC<CommentsSectionProps> = ({
+  complaintId,
+  comments,
+  onAddComment,
 }) => {
-  const { currentUser, addComment } = useStore();
-  const [commentText, setCommentText] = useState('');
-  const [isInternal, setIsInternal] = useState(false);
-  
-  // Filter comments based on view access
-  const visibleComments = isAdminView 
-    ? comments 
-    : comments.filter(comment => !comment.isInternal);
-  
-  const handleSubmitComment = (e: React.FormEvent) => {
+  const { user } = useAuth();
+  const [newComment, setNewComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
-    
-    addComment(complaintId, commentText, isInternal);
-    setCommentText('');
-    setIsInternal(false);
+    if (!newComment.trim() || !user) return;
+
+    try {
+      setIsSubmitting(true);
+      await onAddComment(newComment);
+      setNewComment('');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-  
+
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium">Comments & Updates</h3>
-      
-      {visibleComments.length === 0 ? (
-        <div className="text-center py-6 text-gray-500">
-          No comments yet.
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {visibleComments.map(comment => (
-            <div 
-              key={comment.id} 
-              className={`p-4 rounded-lg ${
-                comment.isInternal 
-                  ? 'bg-amber-50 border border-amber-200' 
-                  : comment.userRole === 'citizen'
-                    ? 'bg-blue-50 border border-blue-100'
-                    : 'bg-gray-50 border border-gray-200'
-              }`}
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium">Comments & Updates</h3>
+        <span className="text-sm text-gray-500">
+          {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
+        </span>
+      </div>
+
+      {user && (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Textarea
+            placeholder="Add a comment or update..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            className="min-h-[100px]"
+          />
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={isSubmitting || !newComment.trim()}
             >
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <span className="font-medium">{comment.userName}</span>
-                  <span className="text-xs ml-2 text-gray-500">
-                    {comment.userRole === 'agency' ? 'Staff' : comment.userRole}
-                  </span>
-                  {comment.isInternal && isAdminView && (
-                    <span className="ml-2 text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded">
+              {isSubmitting ? 'Posting...' : 'Post Comment'}
+            </Button>
+          </div>
+        </form>
+      )}
+
+      <div className="space-y-4">
+        {comments.length === 0 ? (
+          <p className="text-gray-500 text-center py-4">
+            No comments yet. Be the first to comment!
+          </p>
+        ) : (
+          comments.map((comment) => (
+            <Card key={comment.id} className="bg-gray-50">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">{comment.userName}</span>
+                      {comment.userRole && (
+                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                          {comment.userRole}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
+                    </p>
+                  </div>
+                  {comment.isInternal && (
+                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">
                       Internal Note
                     </span>
                   )}
                 </div>
-                <span className="text-xs text-gray-500">{formatDate(comment.timestamp)}</span>
-              </div>
-              <p className="text-gray-800">{comment.content}</p>
-            </div>
-          ))}
-        </div>
-      )}
-      
-      {currentUser && (
-        <form onSubmit={handleSubmitComment} className="space-y-3">
-          <Textarea
-            value={commentText}
-            onChange={e => setCommentText(e.target.value)}
-            placeholder="Add a comment or update..."
-            className="min-h-[100px]"
-          />
-          
-          {isAdminView && (
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="internal-note" 
-                checked={isInternal} 
-                onCheckedChange={(checked) => setIsInternal(checked === true)}
-              />
-              <label 
-                htmlFor="internal-note" 
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Internal note (visible only to staff)
-              </label>
-            </div>
-          )}
-          
-          <Button type="submit" disabled={!commentText.trim()}>
-            Post Comment
-          </Button>
-        </form>
-      )}
+                <p className="mt-2 text-gray-700 whitespace-pre-line">
+                  {comment.content}
+                </p>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
     </div>
   );
 };

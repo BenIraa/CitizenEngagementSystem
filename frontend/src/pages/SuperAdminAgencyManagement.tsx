@@ -49,10 +49,10 @@ const SuperAdminAgencyManagement: React.FC = () => {
   
   // Dummy fetchAgencies
   const fetchAgencies = async () => {
-    setLoading(true);
+      setLoading(true);
     toast.info('Agency loading is temporarily disabled.');
     setAgencies([]);
-    setLoading(false);
+      setLoading(false);
   };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,8 +66,8 @@ const SuperAdminAgencyManagement: React.FC = () => {
   // Dummy handleAddAgency
   const handleAddAgency = async () => {
     toast.info('Adding agency is temporarily disabled.');
-    setIsAddDialogOpen(false);
-    resetForm();
+      setIsAddDialogOpen(false);
+      resetForm();
   };
   
   const resetForm = () => {
